@@ -116,7 +116,6 @@ export const PaperExamView: React.FC<PaperExamViewProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deck.id]);
 
-  // Timer
   useEffect(() => {
     if (isSubmitted) return;
     const timer = setInterval(() => {
@@ -127,7 +126,6 @@ export const PaperExamView: React.FC<PaperExamViewProps> = ({
 
   const handleSelectAnswer = (q: Question, originalOptIdx: number) => {
     if (isSubmitted) return;
-    // In practice mode, once answered, lock that question and record immediately
     if (mode === 'practice' && answers[q.id] !== undefined) return;
 
     setAnswers((prev) => ({
@@ -220,54 +218,59 @@ export const PaperExamView: React.FC<PaperExamViewProps> = ({
   }, [items, answers]);
 
   return (
-    <div className="min-h-screen bg-slate-100/90 pb-24">
-      {/* Sticky Top Exam Header */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-xs">
-        <div className="max-w-6xl mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2">
-          {/* Left: Back + Title */}
-          <div className="flex items-center gap-2 min-w-0">
+    <div className="min-h-screen bg-slate-100/90 pb-20">
+      {/* Mobile-First Sticky Top Bar (Never wraps or overflows on 360px screens!) */}
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-2xs">
+        <div className="max-w-6xl mx-auto px-2.5 sm:px-6 h-13 sm:h-15 flex items-center justify-between gap-1.5 sm:gap-3">
+          {/* Left: Back button + Compact Progress Pills */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
             <button
               type="button"
               onClick={onBack}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 active:scale-95 transition shrink-0"
+              className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 flex items-center justify-center active:scale-95 transition shrink-0"
               title="Quay lại danh sách đề"
             >
-              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+              <ArrowLeft className="w-4 h-4" />
             </button>
-            <div className="min-w-0">
-              <h1 className="text-xs sm:text-base font-extrabold text-slate-900 truncate">
-                {deck.title}
-              </h1>
-              <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-500">
-                <span>
-                  Đã làm:{' '}
-                  <strong className="text-indigo-600">
-                    {answeredCount}/{items.length}
-                  </strong>
-                </span>
-                {mode === 'practice' && !isSubmitted && (
-                  <span className="text-emerald-600 font-bold">
-                    • Đúng {summary.correct} / Sai {summary.wrong}
+
+            <span className="hidden md:inline-block text-sm font-extrabold text-slate-900 truncate max-w-[220px]">
+              {deck.title}
+            </span>
+
+            <div className="flex items-center gap-1 whitespace-nowrap">
+              <span className="px-2 py-1 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-extrabold">
+                {answeredCount}/{items.length} câu
+              </span>
+              {mode === 'practice' && !isSubmitted && (
+                <>
+                  <span className="px-1.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-extrabold">
+                    ✓{summary.correct}
                   </span>
-                )}
-              </div>
+                  {summary.wrong > 0 && (
+                    <span className="px-1.5 py-1 rounded-lg bg-rose-50 text-rose-600 text-xs font-extrabold">
+                      ✕{summary.wrong}
+                    </span>
+                  )}
+                </>
+              )}
             </div>
           </div>
 
           {/* Right: Timer + Palette Trigger + Submit Button */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <div className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 font-mono text-xs sm:text-sm font-extrabold">
-              <Clock className="w-3.5 h-3.5 text-indigo-600" />
+          <div className="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
+            <div className="inline-flex items-center gap-1 px-2 py-1.5 rounded-xl bg-slate-100 text-slate-700 font-mono text-xs font-extrabold">
+              <Clock className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
               <span>{formatTime(elapsedSeconds)}</span>
             </div>
 
             <button
               type="button"
               onClick={() => setShowPaletteDrawer(true)}
-              className="lg:hidden inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-indigo-50 text-indigo-700 text-xs font-extrabold active:scale-95 transition"
+              className="lg:hidden inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold active:scale-95 transition"
+              title="Mở bảng câu hỏi"
             >
-              <Grid className="w-3.5 h-3.5" />
-              <span>Bảng câu</span>
+              <Grid className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+              <span className="hidden xs:inline">Bảng câu</span>
             </button>
 
             {!isSubmitted ? (
@@ -277,9 +280,9 @@ export const PaperExamView: React.FC<PaperExamViewProps> = ({
                   if (unansweredCount > 0) setShowConfirmSubmit(true);
                   else finalizeSubmission();
                 }}
-                className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:opacity-95 text-white text-xs sm:text-sm font-extrabold shadow-sm shadow-indigo-500/25 active:scale-95 transition"
+                className="inline-flex items-center gap-1 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-xs sm:text-sm font-extrabold shadow-xs active:scale-95 transition"
               >
-                <Send className="w-3.5 h-3.5" />
+                <Send className="w-3.5 h-3.5 shrink-0" />
                 <span>Nộp bài</span>
               </button>
             ) : (
@@ -289,10 +292,10 @@ export const PaperExamView: React.FC<PaperExamViewProps> = ({
                   setIsRetryWrongSubset(false);
                   buildPaperItems(deck.questionIds, true, true, Boolean(deck.isRandom40));
                 }}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 text-white text-xs sm:text-sm font-extrabold active:scale-95 transition"
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-extrabold active:scale-95 transition"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Làm lại đề</span>
+                <RotateCcw className="w-3.5 h-3.5 shrink-0" />
+                <span>Làm lại</span>
               </button>
             )}
           </div>
@@ -312,28 +315,28 @@ export const PaperExamView: React.FC<PaperExamViewProps> = ({
       {/* Confirm Submit Modal */}
       {showConfirmSubmit && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 animate-fade">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 animate-card">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 animate-card">
             <div className="flex items-center gap-2.5 text-amber-600 mb-2">
-              <AlertCircle className="w-6 h-6 shrink-0" />
+              <AlertCircle className="w-5 h-5 shrink-0" />
               <h3 className="text-base font-extrabold text-slate-900">
                 Còn {unansweredCount} câu chưa chọn!
               </h3>
             </div>
-            <p className="text-xs sm:text-sm text-slate-600 mb-5 leading-relaxed">
-              Những câu chưa chọn đáp án sẽ bị tính là câu sai. Bạn có muốn nộp bài chấm điểm ngay bây giờ?
+            <p className="text-xs sm:text-sm text-slate-600 mb-4 leading-relaxed">
+              Các câu bỏ trống sẽ tính là sai. Bạn có muốn nộp bài chấm điểm ngay?
             </p>
             <div className="flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setShowConfirmSubmit(false)}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50"
+                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 text-xs font-bold"
               >
-                Quay lại làm tiếp
+                Làm tiếp
               </button>
               <button
                 type="button"
                 onClick={finalizeSubmission}
-                className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-extrabold hover:bg-indigo-700"
+                className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-extrabold"
               >
                 Chấm điểm luôn
               </button>
@@ -343,37 +346,39 @@ export const PaperExamView: React.FC<PaperExamViewProps> = ({
       )}
 
       {/* Main Content Container */}
-      <div className="max-w-6xl mx-auto px-3 sm:px-6 pt-4">
-        {/* Top Toolbar (Before submission): Mode Switch + Shuffle Controls */}
+      <div className="max-w-6xl mx-auto px-2.5 sm:px-6 pt-3">
+        {/* Top Control Card (Clean 1-line pills on mobile!) */}
         {!isSubmitted && (
-          <div className="bg-white rounded-2xl border border-slate-200/90 p-3 mb-4 shadow-2xs flex flex-wrap items-center justify-between gap-2.5">
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-2.5 mb-3 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            {/* Mode Switcher */}
+            <div className="grid grid-cols-2 bg-slate-100 p-1 rounded-xl">
               <button
                 type="button"
                 onClick={() => setMode('practice')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-extrabold flex items-center gap-1.5 transition ${
+                className={`py-1.5 px-2.5 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1 whitespace-nowrap transition ${
                   mode === 'practice'
                     ? 'bg-white text-emerald-700 shadow-2xs'
                     : 'text-slate-600'
                 }`}
               >
-                <Zap className="w-3.5 h-3.5" />
-                Chọn xong hiện ĐA ngay
+                <Zap className="w-3.5 h-3.5 shrink-0" />
+                <span>Hiện ĐA ngay</span>
               </button>
               <button
                 type="button"
                 onClick={() => setMode('exam')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-extrabold flex items-center gap-1.5 transition ${
+                className={`py-1.5 px-2.5 rounded-lg text-xs font-extrabold flex items-center justify-center gap-1 whitespace-nowrap transition ${
                   mode === 'exam'
                     ? 'bg-white text-indigo-700 shadow-2xs'
                     : 'text-slate-600'
                 }`}
               >
-                <Award className="w-3.5 h-3.5" />
-                Nộp bài mới hiện ĐA
+                <Award className="w-3.5 h-3.5 shrink-0" />
+                <span>Nộp mới hiện ĐA</span>
               </button>
             </div>
 
+            {/* Shuffle Controls */}
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
@@ -387,14 +392,14 @@ export const PaperExamView: React.FC<PaperExamViewProps> = ({
                     false
                   );
                 }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1 transition active:scale-95 ${
+                className={`flex-1 sm:flex-initial py-1.5 px-3 rounded-xl text-xs font-bold border flex items-center justify-center gap-1 whitespace-nowrap transition active:scale-95 ${
                   shuffleQ
                     ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
                     : 'bg-slate-50 border-slate-200 text-slate-600'
                 }`}
               >
-                <Shuffle className="w-3.5 h-3.5" />
-                Đảo câu
+                <Shuffle className="w-3.5 h-3.5 shrink-0" />
+                <span>Đảo câu</span>
               </button>
 
               <button
@@ -409,14 +414,14 @@ export const PaperExamView: React.FC<PaperExamViewProps> = ({
                     false
                   );
                 }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1 transition active:scale-95 ${
+                className={`flex-1 sm:flex-initial py-1.5 px-3 rounded-xl text-xs font-bold border flex items-center justify-center gap-1 whitespace-nowrap transition active:scale-95 ${
                   shuffleOpt
                     ? 'bg-violet-50 border-violet-300 text-violet-700'
                     : 'bg-slate-50 border-slate-200 text-slate-600'
                 }`}
               >
-                <Shuffle className="w-3.5 h-3.5" />
-                Đảo A/B/C/D
+                <Shuffle className="w-3.5 h-3.5 shrink-0" />
+                <span>Đảo A/B/C/D</span>
               </button>
             </div>
           </div>
@@ -424,26 +429,27 @@ export const PaperExamView: React.FC<PaperExamViewProps> = ({
 
         {/* Score Result Banner (After submission) */}
         {isSubmitted && (
-          <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 mb-5 shadow-sm animate-card">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100">
-              <div className="flex items-center gap-4">
-                <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white flex flex-col items-center justify-center shadow-lg shadow-indigo-500/25 shrink-0">
-                  <span className="text-2xl font-black leading-none">{summary.score}</span>
-                  <span className="text-[10px] font-bold text-indigo-100 mt-1">THANG 10</span>
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 mb-4 shadow-xs animate-card">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-3.5">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white flex flex-col items-center justify-center shadow-md shrink-0">
+                  <span className="text-xl sm:text-2xl font-black leading-none">
+                    {summary.score}
+                  </span>
+                  <span className="text-[10px] font-bold text-indigo-100 mt-1">ĐIỂM</span>
                 </div>
                 <div>
-                  <h2 className="text-lg sm:text-xl font-black text-slate-900">
-                    Kết quả: Đúng {summary.correct}/{items.length} câu
+                  <h2 className="text-base sm:text-lg font-black text-slate-900">
+                    Đúng {summary.correct}/{items.length} câu
                   </h2>
-                  <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-                    Sai: <strong className="text-rose-600">{summary.wrong}</strong> câu • Bỏ trống:{' '}
-                    <strong className="text-amber-600">{summary.empty}</strong> câu • Thời gian:{' '}
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Sai: <strong className="text-rose-600">{summary.wrong}</strong> • Trống:{' '}
+                    <strong className="text-amber-600">{summary.empty}</strong> • Thời gian:{' '}
                     <strong>{formatTime(elapsedSeconds)}</strong>
                   </p>
                 </div>
               </div>
 
-              {/* Action Buttons to Re-test Wrong Questions or Full Deck */}
               <div className="flex flex-wrap items-center gap-2">
                 {summary.wrongIds.length > 0 && (
                   <button
@@ -452,10 +458,10 @@ export const PaperExamView: React.FC<PaperExamViewProps> = ({
                       setIsRetryWrongSubset(true);
                       buildPaperItems(summary.wrongIds, true, true, false);
                     }}
-                    className="px-4 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-extrabold shadow-md shadow-rose-500/20 flex items-center gap-1.5 active:scale-95 transition"
+                    className="flex-1 sm:flex-initial justify-center px-3.5 py-2.5 rounded-xl bg-rose-600 text-white text-xs font-extrabold flex items-center gap-1.5 active:scale-95 transition"
                   >
-                    <RotateCcw className="w-4 h-4" />
-                    Làm lại {summary.wrongIds.length} câu vừa sai
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    Làm lại {summary.wrongIds.length} câu sai
                   </button>
                 )}
 
@@ -465,30 +471,28 @@ export const PaperExamView: React.FC<PaperExamViewProps> = ({
                     setIsRetryWrongSubset(false);
                     buildPaperItems(deck.questionIds, true, true, Boolean(deck.isRandom40));
                   }}
-                  className="px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold shadow-md shadow-indigo-500/20 flex items-center gap-1.5 active:scale-95 transition"
+                  className="flex-1 sm:flex-initial justify-center px-3.5 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-extrabold flex items-center gap-1.5 active:scale-95 transition"
                 >
-                  <Shuffle className="w-4 h-4" />
-                  Làm lại cả đề (Trộn mới)
+                  <Shuffle className="w-3.5 h-3.5" />
+                  Làm lại cả đề
                 </button>
               </div>
             </div>
 
-            {/* Filter Pills for Reviewing Answers */}
-            <div className="flex items-center gap-2 pt-4">
-              <span className="text-xs font-bold text-slate-400 mr-1">Lọc bài làm:</span>
+            <div className="flex items-center gap-1.5 pt-3 overflow-x-auto no-scrollbar">
               {[
                 { id: 'all', label: `Tất cả (${items.length})` },
-                { id: 'wrong', label: `Câu sai / Trống (${summary.wrongIds.length})` },
+                { id: 'wrong', label: `Câu sai (${summary.wrongIds.length})` },
                 { id: 'correct', label: `Câu đúng (${summary.correct})` },
               ].map((f) => (
                 <button
                   key={f.id}
                   type="button"
                   onClick={() => setResultFilter(f.id as 'all' | 'wrong' | 'correct')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-extrabold whitespace-nowrap transition ${
                     resultFilter === f.id
                       ? 'bg-slate-900 text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70'
+                      : 'bg-slate-100 text-slate-600'
                   }`}
                 >
                   {f.label}
@@ -499,9 +503,8 @@ export const PaperExamView: React.FC<PaperExamViewProps> = ({
         )}
 
         {/* 2-Column Layout: Left Questions Stream + Right Question Palette */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-          {/* Left: Vertical Stream of Question Cards */}
-          <div className="lg:col-span-8 space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+          <div className="lg:col-span-8 space-y-3">
             {items.map((item, idx) => {
               const q = item.question;
               const chosenOrig = answers[q.id];
@@ -514,11 +517,6 @@ export const PaperExamView: React.FC<PaperExamViewProps> = ({
                 if (resultFilter === 'wrong' && isCorrectAnswer) return null;
                 if (resultFilter === 'correct' && !isCorrectAnswer) return null;
               }
-
-              // Find selected visual letter (A/B/C/D)
-              const selectedVisualIdx = item.options.findIndex(
-                (o) => o.originalIndex === chosenOrig
-              );
 
               const siblings =
                 q.siblingIds.length > 1
@@ -533,35 +531,35 @@ export const PaperExamView: React.FC<PaperExamViewProps> = ({
                   ref={(el) => {
                     cardRefs.current[q.id] = el;
                   }}
-                  className="bg-white rounded-3xl border border-slate-200/90 shadow-2xs overflow-hidden transition-all"
+                  className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden"
                 >
-                  {/* Question Card Header */}
-                  <div className="px-4 sm:px-6 py-3 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="px-2.5 py-1 rounded-xl bg-indigo-600 text-white text-xs font-extrabold">
+                  {/* Clean Compact Card Header */}
+                  <div className="px-3.5 sm:px-5 py-2.5 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="px-2.5 py-0.5 rounded-lg bg-indigo-600 text-white text-xs font-extrabold whitespace-nowrap">
                         Câu {String(idx + 1).padStart(2, '0')}
                       </span>
-                      <span className="text-xs font-bold text-slate-400">
-                        Mã #{q.id} ({q.part}-{q.origNum})
+                      <span className="text-[11px] font-bold text-slate-400 whitespace-nowrap">
+                        #{q.id} ({q.part}-{q.origNum})
                       </span>
                       {siblings.length > 1 && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-bold">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-bold whitespace-nowrap">
                           <Sparkles className="w-3 h-3 text-amber-600" />
                           Trùng {siblings.length} câu
                         </span>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 shrink-0">
                       {showFeedback &&
                         (isCorrectAnswer ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-100 text-emerald-800 text-xs font-extrabold">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 text-xs font-extrabold">
                             <CheckCircle2 className="w-3.5 h-3.5" /> Đúng
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-rose-100 text-rose-800 text-xs font-extrabold">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-rose-100 text-rose-800 text-xs font-extrabold">
                             <XCircle className="w-3.5 h-3.5" />{' '}
-                            {chosenOrig === undefined ? 'Chưa làm' : 'Sai'}
+                            {chosenOrig === undefined ? 'Trống' : 'Sai'}
                           </span>
                         ))}
 
@@ -569,10 +567,10 @@ export const PaperExamView: React.FC<PaperExamViewProps> = ({
                         <button
                           type="button"
                           onClick={() => toggleFlag(q.id)}
-                          className={`p-1.5 rounded-xl border transition ${
+                          className={`p-1.5 rounded-lg border transition ${
                             isFlagged
                               ? 'bg-amber-100 border-amber-300 text-amber-700'
-                              : 'bg-white border-slate-200 text-slate-400 hover:text-slate-600'
+                              : 'bg-white border-slate-200 text-slate-400'
                           }`}
                           title="Đánh dấu phân vân"
                         >
@@ -586,9 +584,9 @@ export const PaperExamView: React.FC<PaperExamViewProps> = ({
                     </div>
                   </div>
 
-                  {/* Question Stem & Options */}
-                  <div className="p-4 sm:p-6">
-                    <h3 className="text-[15px] sm:text-base font-extrabold text-slate-900 leading-relaxed mb-4">
+                  {/* Question Stem & 4 Direct Touchable Options */}
+                  <div className="p-3.5 sm:p-5">
+                    <h3 className="text-[15px] sm:text-base font-extrabold text-slate-900 leading-snug mb-3.5">
                       {q.question}
                     </h3>
 
@@ -599,7 +597,7 @@ export const PaperExamView: React.FC<PaperExamViewProps> = ({
                         const isThisCorrect = opt.originalIndex === q.correctIndex;
 
                         let rowStyle =
-                          'border-slate-200/80 bg-slate-50/40 hover:border-indigo-300 hover:bg-indigo-50/20 text-slate-800';
+                          'border-slate-200/80 bg-slate-50/40 hover:border-indigo-300 text-slate-800';
                         let letterStyle = 'bg-white border-slate-200 text-slate-700';
 
                         if (!showFeedback) {
@@ -629,78 +627,41 @@ export const PaperExamView: React.FC<PaperExamViewProps> = ({
                             type="button"
                             disabled={showFeedback}
                             onClick={() => handleSelectAnswer(q, opt.originalIndex)}
-                            className={`w-full text-left p-3 sm:p-3.5 rounded-2xl border-2 transition-all flex items-start gap-3 active:scale-[0.99] ${rowStyle}`}
+                            className={`w-full text-left p-3 rounded-xl border-2 transition-all flex items-start gap-2.5 active:scale-[0.99] ${rowStyle}`}
                           >
                             <span
-                              className={`w-7 h-7 rounded-xl border text-xs font-extrabold flex items-center justify-center shrink-0 mt-0.5 transition-colors ${letterStyle}`}
+                              className={`w-7 h-7 rounded-lg border text-xs font-extrabold flex items-center justify-center shrink-0 mt-0.5 transition-colors ${letterStyle}`}
                             >
                               {letter}
                             </span>
                             <span className="flex-1 text-sm sm:text-[15px] leading-relaxed">
                               {opt.text}
                             </span>
+                            {showFeedback && isThisCorrect && (
+                              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                            )}
+                            {showFeedback && isThisSelected && !isThisCorrect && (
+                              <XCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                            )}
                           </button>
                         );
                       })}
                     </div>
 
-                    {/* Azota-style Quick Answer Bubble Row (A - B - C - D) */}
-                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                      <span className="text-xs font-bold text-slate-400">
-                        Chọn nhanh đáp án:
-                      </span>
-                      <div className="flex items-center gap-2">
-                        {item.options.map((opt, vIdx) => {
-                          const letter = String.fromCharCode(65 + vIdx);
-                          const isSelected = selectedVisualIdx === vIdx;
-                          const isCorrect = opt.originalIndex === q.correctIndex;
-
-                          let pillClass =
-                            'bg-slate-100 border-slate-200 text-slate-700 hover:bg-indigo-50 hover:border-indigo-300';
-                          if (!showFeedback) {
-                            if (isSelected) {
-                              pillClass =
-                                'bg-indigo-600 border-indigo-600 text-white shadow-sm shadow-indigo-500/30';
-                            }
-                          } else {
-                            if (isCorrect) {
-                              pillClass = 'bg-emerald-600 border-emerald-600 text-white';
-                            } else if (isSelected) {
-                              pillClass = 'bg-rose-600 border-rose-600 text-white';
-                            } else {
-                              pillClass = 'bg-slate-100 border-slate-200 text-slate-300';
-                            }
-                          }
-
-                          return (
-                            <button
-                              key={letter}
-                              type="button"
-                              disabled={showFeedback}
-                              onClick={() => handleSelectAnswer(q, opt.originalIndex)}
-                              className={`w-10 h-9 sm:w-11 sm:h-9 rounded-xl border text-xs font-black transition active:scale-90 flex items-center justify-center ${pillClass}`}
-                            >
-                              {letter}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Sibling Question Comparison Box (shown after feedback if question has duplicate stems!) */}
+                    {/* Sibling Question Comparison Box */}
                     {showFeedback && siblings.length > 1 && (
-                      <div className="mt-3.5 p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200/80">
+                      <div className="mt-3 p-3 rounded-xl bg-amber-50/90 border border-amber-200/80">
                         <div className="text-xs font-extrabold text-amber-900 mb-1.5 flex items-center gap-1.5">
                           <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                           <span>
-                            Mẹo phân biệt ({siblings.length} câu hỏi trùng nội dung câu này):
+                            {siblings.length} câu có chung câu hỏi này (Đáp án đúng từng câu):
                           </span>
                         </div>
                         <ul className="space-y-1 text-xs text-amber-950">
                           {siblings.map((sq) => (
                             <li
                               key={sq.id}
-                              className={`px-2.5 py-1.5 rounded-xl ${
+                              className={`px-2.5 py-1.5 rounded-lg ${
                                 sq.id === q.id ? 'bg-amber-200/70 font-bold' : 'bg-white/70'
                               }`}
                             >
@@ -718,10 +679,10 @@ export const PaperExamView: React.FC<PaperExamViewProps> = ({
           </div>
 
           {/* Right Sticky Question Palette (Desktop) */}
-          <div className="hidden lg:block lg:col-span-4 lg:sticky lg:top-20 bg-white rounded-3xl border border-slate-200/90 p-5 shadow-2xs">
+          <div className="hidden lg:block lg:col-span-4 lg:sticky lg:top-20 bg-white rounded-2xl border border-slate-200/90 p-4 shadow-2xs">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
-                Danh sách câu hỏi ({items.length})
+                Bảng câu hỏi ({items.length})
               </h3>
               <span className="text-xs font-bold text-indigo-600">
                 {answeredCount}/{items.length}
@@ -760,21 +721,6 @@ export const PaperExamView: React.FC<PaperExamViewProps> = ({
                   </button>
                 );
               })}
-            </div>
-
-            <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap gap-3 text-[11px] font-semibold text-slate-500">
-              <span className="inline-flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded bg-indigo-600 inline-block" /> Đã chọn
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded bg-emerald-500 inline-block" /> Đúng
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded bg-rose-500 inline-block" /> Sai
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded bg-amber-400 inline-block" /> Gắn cờ
-              </span>
             </div>
           </div>
         </div>

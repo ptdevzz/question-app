@@ -1,15 +1,14 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import {
-  ShieldCheck,
   Zap,
   Award,
   RotateCcw,
-  Search,
   Sparkles,
   AlertTriangle,
   Layers,
   BookOpen,
   Trophy,
+  FileText,
 } from 'lucide-react';
 import rawData from './data/questions.json';
 import {
@@ -23,11 +22,11 @@ import {
   recordQuestionAttempt,
   recordDeckSubmission,
   resetAllProgress,
+  removeActiveWrong,
 } from './utils/storage';
 import { PaperExamView } from './components/PaperExamView';
 import { SearchView } from './components/SearchView';
 import { SmartReviewView } from './components/SmartReviewView';
-import { removeActiveWrong } from './utils/storage';
 
 const dataset = rawData as unknown as QuestionDataset;
 
@@ -40,7 +39,7 @@ export function App() {
     shuffleOpt: boolean;
   } | null>(null);
 
-  const [homeTab, setHomeTab] = useState<'decks' | 'duplicates' | 'search'>('decks');
+  const [homeTab, setHomeTab] = useState<'decks' | 'full' | 'duplicates'>('decks');
   const [deckGroupStyle, setDeckGroupStyle] = useState<'50' | 'topic'>('50');
 
   const masteredSet = useMemo(() => new Set(progress.masteredIds), [progress.masteredIds]);
@@ -60,7 +59,6 @@ export function App() {
     setProgress((prev) => removeActiveWrong(prev, questionId));
   }, []);
 
-  // Build standard 50-question decks (Azota style)
   const decksBy50: DeckDefinition[] = useMemo(() => {
     const ranges: {
       id: string;
@@ -139,7 +137,6 @@ export function App() {
     }));
   }, []);
 
-  // Build 10 Topic Decks (~30 questions each)
   const decksByTopic: DeckDefinition[] = useMemo(() => {
     return dataset.meta.topics.map((t) => ({
       id: `topic-${t.id}`,
@@ -151,7 +148,6 @@ export function App() {
     }));
   }, []);
 
-  // Special Full & Random Decks
   const specialDecks: DeckDefinition[] = useMemo(() => {
     return [
       {
@@ -192,7 +188,6 @@ export function App() {
     ];
   }, []);
 
-  // If user is currently inside a deck, render the Azota-style PaperExamView
   if (activeDeck) {
     return (
       <PaperExamView
@@ -235,13 +230,12 @@ export function App() {
     return (
       <div
         key={deck.id}
-        className="bg-white rounded-3xl border border-slate-200/90 p-5 shadow-2xs hover:shadow-md hover:border-indigo-200 transition-all flex flex-col justify-between gap-4 animate-card"
+        className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-indigo-200 transition-all flex flex-col justify-between gap-3.5 animate-card"
       >
         <div>
-          {/* Top Row: Badge + Best Score */}
-          <div className="flex items-center justify-between gap-2 mb-2.5">
+          <div className="flex items-center justify-between gap-2 mb-2">
             <span
-              className={`px-2.5 py-1 rounded-xl border text-xs font-extrabold ${
+              className={`px-2.5 py-0.5 rounded-xl border text-xs font-extrabold whitespace-nowrap ${
                 badgeColors[deck.accent]
               }`}
             >
@@ -249,24 +243,24 @@ export function App() {
             </span>
 
             {stat ? (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-extrabold">
-                <Trophy className="w-3.5 h-3.5 text-amber-500" />
-                Cao nhất: {stat.bestScore.toFixed(1)}đ ({stat.attempts} lần)
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-extrabold whitespace-nowrap">
+                <Trophy className="w-3 h-3 text-amber-500 shrink-0" />
+                {stat.bestScore.toFixed(1)}đ ({stat.attempts} lần)
               </span>
             ) : (
-              <span className="text-xs font-semibold text-slate-400">Chưa làm lần nào</span>
+              <span className="text-[11px] font-semibold text-slate-400 whitespace-nowrap">
+                Chưa làm
+              </span>
             )}
           </div>
 
-          {/* Title & Subtitle */}
-          <h3 className="text-base sm:text-lg font-extrabold text-slate-900 leading-snug">
+          <h3 className="text-[15px] sm:text-lg font-extrabold text-slate-900 leading-snug">
             {deck.title}
           </h3>
           <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{deck.subtitle}</p>
 
-          {/* Mastery Progress Bar */}
           {!deck.isRandom40 && (
-            <div className="mt-3.5">
+            <div className="mt-3">
               <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 mb-1">
                 <span>
                   Đã thuộc {masteredCount}/{deck.questionIds.length} câu
@@ -283,7 +277,6 @@ export function App() {
           )}
         </div>
 
-        {/* 2 Direct Action Buttons (Practice vs Exam) */}
         <div className="grid grid-cols-2 gap-2 pt-1">
           <button
             type="button"
@@ -295,10 +288,10 @@ export function App() {
                 shuffleOpt: false,
               })
             }
-            className="py-2.5 px-3 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-extrabold flex items-center justify-center gap-1.5 active:scale-95 transition"
+            className="py-2.5 px-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-extrabold flex items-center justify-center gap-1 whitespace-nowrap active:scale-95 transition"
           >
-            <Zap className="w-3.5 h-3.5 text-emerald-600" />
-            Ôn (Hiện ĐA ngay)
+            <Zap className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span>Ôn (Hiện ĐA)</span>
           </button>
 
           <button
@@ -311,10 +304,10 @@ export function App() {
                 shuffleOpt: true,
               })
             }
-            className="py-2.5 px-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:opacity-95 text-white text-xs font-extrabold shadow-sm shadow-indigo-500/20 flex items-center justify-center gap-1.5 active:scale-95 transition"
+            className="py-2.5 px-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:opacity-95 text-white text-xs font-extrabold shadow-xs flex items-center justify-center gap-1 whitespace-nowrap active:scale-95 transition"
           >
-            <Award className="w-3.5 h-3.5" />
-            Thi chấm điểm
+            <Award className="w-3.5 h-3.5 shrink-0" />
+            <span>Thi chấm điểm</span>
           </button>
         </div>
       </div>
@@ -323,19 +316,28 @@ export function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-100/80 text-slate-900 pb-20 md:pb-10">
-      {/* Top Header */}
+      {/* Top Header with "Mie Miee" Brand & Logo */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80">
-        <div className="max-w-5xl mx-auto px-3.5 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white flex items-center justify-center shadow-sm shadow-indigo-500/25">
-              <ShieldCheck className="w-5 h-5" />
+        <div className="max-w-5xl mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2">
+          {/* Brand Logo: Mie Miee */}
+          <div
+            onClick={() => setHomeTab('decks')}
+            className="flex items-center gap-2.5 cursor-pointer select-none min-w-0"
+          >
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-pink-500 via-purple-500 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-pink-500/20 shrink-0 relative">
+              <span className="font-black text-base sm:text-lg tracking-tighter leading-none">
+                M
+              </span>
+              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-amber-300 border-2 border-white flex items-center justify-center text-[8px]">
+                ✦
+              </span>
             </div>
-            <div>
-              <h1 className="text-sm sm:text-base font-black text-slate-900 leading-tight">
-                Ôn Thi GDQP-AN
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg font-black bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent leading-tight truncate">
+                Mie Miee
               </h1>
-              <p className="text-[11px] font-semibold text-slate-400">
-                294 Câu Chuẩn File Word (P1 + P2)
+              <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 truncate">
+                Ôn Thi 294 Câu GDQP
               </p>
             </div>
           </div>
@@ -349,7 +351,16 @@ export function App() {
                 homeTab === 'decks' ? 'bg-white text-indigo-600 shadow-2xs' : 'text-slate-600'
               }`}
             >
-              Danh sách Bộ đề
+              Bộ đề ôn thi
+            </button>
+            <button
+              type="button"
+              onClick={() => setHomeTab('full')}
+              className={`px-4 py-1.5 rounded-xl text-xs font-extrabold transition ${
+                homeTab === 'full' ? 'bg-white text-indigo-600 shadow-2xs' : 'text-slate-600'
+              }`}
+            >
+              Full 294 câu (Có ĐA)
             </button>
             <button
               type="button"
@@ -360,26 +371,18 @@ export function App() {
                   : 'text-slate-600'
               }`}
             >
-              <span>62 Cụm câu trùng & Câu sai</span>
+              <span>Câu trùng & Câu sai</span>
               {progress.activeWrongIds.length > 0 && (
                 <span className="px-1.5 rounded-full bg-rose-500 text-white text-[10px]">
                   {progress.activeWrongIds.length}
                 </span>
               )}
             </button>
-            <button
-              type="button"
-              onClick={() => setHomeTab('search')}
-              className={`px-4 py-1.5 rounded-xl text-xs font-extrabold transition ${
-                homeTab === 'search' ? 'bg-white text-indigo-600 shadow-2xs' : 'text-slate-600'
-              }`}
-            >
-              Tra cứu & Đọc lướt
-            </button>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-extrabold">
+          {/* Right Mastery Pill */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="px-2.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-extrabold whitespace-nowrap">
               Thuộc {progress.masteredIds.length}/294 ({masteredPct}%)
             </span>
             {(progress.masteredIds.length > 0 || progress.activeWrongIds.length > 0) && (
@@ -400,115 +403,104 @@ export function App() {
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="max-w-5xl w-full mx-auto px-3.5 sm:px-6 pt-4 sm:pt-6">
+      {/* Main Content */}
+      <main className="max-w-5xl w-full mx-auto px-3 sm:px-6 pt-3.5 sm:pt-6">
         {homeTab === 'decks' && (
-          <div className="space-y-6">
-            {/* Banner for Active Wrong Questions (if user has wrong questions, let them practice those with 1 click!) */}
+          <div className="space-y-5">
             {progress.activeWrongIds.length > 0 && (
-              <div className="bg-gradient-to-r from-rose-600 to-orange-500 rounded-3xl p-4 sm:p-5 text-white shadow-md shadow-rose-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-card">
+              <div className="bg-gradient-to-r from-rose-600 to-orange-500 rounded-2xl sm:rounded-3xl p-4 text-white shadow-md shadow-rose-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-card">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
-                    <AlertTriangle className="w-6 h-6" />
+                  <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
+                    <AlertTriangle className="w-5 h-5" />
                   </div>
                   <div>
                     <h2 className="text-sm sm:text-base font-black">
-                      Bạn đang có {progress.activeWrongIds.length} câu làm sai cần ôn lại!
+                      Đang có {progress.activeWrongIds.length} câu làm sai cần ôn lại!
                     </h2>
                     <p className="text-xs text-rose-100">
-                      Làm lại riêng những câu vừa sai cho đến khi đúng 100% để nhớ lâu nhất.
+                      Làm lại riêng những câu vừa sai cho đến khi đúng 100%.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setActiveDeck({
-                        deck: {
-                          id: 'wrong-deck',
-                          title: `Đề Ôn Lại ${progress.activeWrongIds.length} Câu Đang Sai`,
-                          subtitle: 'Các câu bạn đã chọn sai trong những lần làm trước',
-                          badge: 'Câu sai',
-                          accent: 'rose',
-                          questionIds: progress.activeWrongIds,
-                        },
-                        mode: 'practice',
-                        shuffleQ: true,
-                        shuffleOpt: true,
-                      })
-                    }
-                    className="px-4 py-2.5 rounded-2xl bg-white text-rose-600 text-xs sm:text-sm font-black shadow-xs active:scale-95 transition"
-                  >
-                    Làm lại {progress.activeWrongIds.length} câu sai ngay →
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setActiveDeck({
+                      deck: {
+                        id: 'wrong-deck',
+                        title: `Đề Ôn Lại ${progress.activeWrongIds.length} Câu Đang Sai`,
+                        subtitle: 'Các câu bạn đã chọn sai trong những lần làm trước',
+                        badge: 'Câu sai',
+                        accent: 'rose',
+                        questionIds: progress.activeWrongIds,
+                      },
+                      mode: 'practice',
+                      shuffleQ: true,
+                      shuffleOpt: true,
+                    })
+                  }
+                  className="px-4 py-2.5 rounded-xl bg-white text-rose-600 text-xs sm:text-sm font-black shadow-xs whitespace-nowrap active:scale-95 transition"
+                >
+                  Làm lại {progress.activeWrongIds.length} câu sai →
+                </button>
               </div>
             )}
 
-            {/* Section 1: 6 Đề Chia Nhỏ (50 câu/đề) hoặc 10 Chuyên đề */}
-            <div className="space-y-3.5">
-              <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
-                    <Layers className="w-5 h-5 text-indigo-600" />
-                    Bộ Đề Ôn Tập Theo Chặng
+                    <Layers className="w-5 h-5 text-indigo-600 shrink-0" />
+                    <span>Bộ Đề Ôn Tập Theo Chặng</span>
                   </h2>
-                  <p className="text-xs text-slate-500">
-                    Mỗi đề chia nhỏ để bạn làm đi làm lại vài lần là thuộc hết.
-                  </p>
                 </div>
 
-                <div className="flex items-center gap-1 bg-white border border-slate-200 p-1 rounded-2xl">
+                <div className="grid grid-cols-2 sm:flex items-center gap-1 bg-white border border-slate-200 p-1 rounded-xl">
                   <button
                     type="button"
                     onClick={() => setDeckGroupStyle('50')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-extrabold whitespace-nowrap transition ${
                       deckGroupStyle === '50'
                         ? 'bg-indigo-600 text-white'
-                        : 'text-slate-600 hover:bg-slate-50'
+                        : 'text-slate-600'
                     }`}
                   >
-                    Chia 6 Đề (50 câu/đề)
+                    6 Đề (50 câu/đề)
                   </button>
                   <button
                     type="button"
                     onClick={() => setDeckGroupStyle('topic')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-extrabold whitespace-nowrap transition ${
                       deckGroupStyle === 'topic'
                         ? 'bg-indigo-600 text-white'
-                        : 'text-slate-600 hover:bg-slate-50'
+                        : 'text-slate-600'
                     }`}
                   >
-                    Chia 10 Bài (~30 câu/bài)
+                    10 Bài (~30 câu/bài)
                   </button>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
                 {displayedDecks.map(renderDeckCard)}
               </div>
             </div>
 
-            {/* Section 2: Đề Thi Thử & Đề Tổng Hợp */}
-            <div className="space-y-3.5 pt-2">
-              <div>
-                <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
-                  <Award className="w-5 h-5 text-emerald-600" />
-                  Đề Thi Thử & Đề Tổng Hợp
-                </h2>
-                <p className="text-xs text-slate-500">
-                  Thi thử 40 câu ngẫu nhiên hoặc làm trọn bộ Phần 1, Phần 2.
-                </p>
-              </div>
+            <div className="space-y-3 pt-1">
+              <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                <Award className="w-5 h-5 text-emerald-600 shrink-0" />
+                <span>Đề Thi Thử & Đề Tổng Hợp</span>
+              </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                 {specialDecks.map(renderDeckCard)}
               </div>
             </div>
           </div>
         )}
+
+        {homeTab === 'full' && <SearchView questions={dataset.questions} />}
 
         {homeTab === 'duplicates' && (
           <SmartReviewView
@@ -543,8 +535,6 @@ export function App() {
             }}
           />
         )}
-
-        {homeTab === 'search' && <SearchView questions={dataset.questions} />}
       </main>
 
       {/* Mobile Bottom Navigation Bar */}
@@ -553,18 +543,29 @@ export function App() {
           <button
             type="button"
             onClick={() => setHomeTab('decks')}
-            className={`py-1.5 rounded-xl flex flex-col items-center justify-center gap-0.5 ${
+            className={`py-1.5 rounded-xl flex flex-col items-center justify-center gap-0.5 whitespace-nowrap ${
               homeTab === 'decks' ? 'text-indigo-600 font-extrabold' : 'text-slate-500 font-semibold'
             }`}
           >
             <BookOpen className="w-5 h-5" />
-            <span className="text-[11px]">Danh sách Đề</span>
+            <span className="text-[11px]">Bộ đề ôn thi</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setHomeTab('full')}
+            className={`py-1.5 rounded-xl flex flex-col items-center justify-center gap-0.5 whitespace-nowrap ${
+              homeTab === 'full' ? 'text-indigo-600 font-extrabold' : 'text-slate-500 font-semibold'
+            }`}
+          >
+            <FileText className="w-5 h-5" />
+            <span className="text-[11px]">Full 294 câu</span>
           </button>
 
           <button
             type="button"
             onClick={() => setHomeTab('duplicates')}
-            className={`relative py-1.5 rounded-xl flex flex-col items-center justify-center gap-0.5 ${
+            className={`relative py-1.5 rounded-xl flex flex-col items-center justify-center gap-0.5 whitespace-nowrap ${
               homeTab === 'duplicates'
                 ? 'text-indigo-600 font-extrabold'
                 : 'text-slate-500 font-semibold'
@@ -573,21 +574,10 @@ export function App() {
             <Sparkles className="w-5 h-5" />
             <span className="text-[11px]">Câu trùng & Sai</span>
             {progress.activeWrongIds.length > 0 && (
-              <span className="absolute top-0.5 right-5 min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">
+              <span className="absolute top-0.5 right-4 min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">
                 {progress.activeWrongIds.length}
               </span>
             )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setHomeTab('search')}
-            className={`py-1.5 rounded-xl flex flex-col items-center justify-center gap-0.5 ${
-              homeTab === 'search' ? 'text-indigo-600 font-extrabold' : 'text-slate-500 font-semibold'
-            }`}
-          >
-            <Search className="w-5 h-5" />
-            <span className="text-[11px]">Đọc lướt & Tìm</span>
           </button>
         </div>
       </nav>
